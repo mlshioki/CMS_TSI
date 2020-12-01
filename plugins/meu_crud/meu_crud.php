@@ -18,5 +18,47 @@ function criar_tabela(){
     $wpdb->query("CREATE TABLE {$wpdb->prefix}agenda  
                             (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
                             nome VARCHAR(255) NOT NULL, 
-                            whatsapp BIGINT UNSIGNED NOT NULL)");
+                            telefone BIGINT UNSIGNED NOT NULL)");
+}
+register_deactivation_hook(__FILE__, 'apagar_tabela');
+
+
+function apagar_tabela(){ 
+    global $wpdb;
+    $wpdb->query("DROP TABLE {$wpdb->prefix}agenda");
+}
+
+function crud_do_meu_plugin(){
+    add_menu_page( 'config do meu plugin',
+                    'Plugin', 
+                    'administrator', 
+                    'meu-plugin-config', 
+                    'abre_configuracoes', 
+                    'dashicons-database');
+ 
+}
+
+add_action( 'admin_menu', 'crud_do_meu_plugin');
+
+function abre_configuracoes(){
+    global $wpdb;
+
+    if (isset($_GET['apagar'])){
+        $id =preg_replace('/\D/', '', $_GET['apagar']); 
+
+        $wpdb->query("DELETE FROM {$wpdb->prefix}agenda WHERE id=$id");
+    }
+
+    if (isset($_POST['submit'])){
+        if ($_POST['submit'] == 'gravar'){
+            $wpdb->query(
+                $wpdb ->prepare("  INSERT INTO {$wpdb->prefix}agenda (nome, telefone) 
+                                            VALUES (%s, %d)", $_POST['nome'], $_POST['telefone']) );
+        }
+
+    }
+
+    $contatos = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}agenda");
+    
+    require 'lista_tpl.php';
 }
